@@ -622,7 +622,7 @@
     try {
       const db = await openDB();
       const tx = db.transaction(DB_STORE, 'readwrite');
-      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode });
+      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode }, 'main');
       await new Promise((resolve, reject) => {
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
@@ -1648,7 +1648,7 @@
     dbReq.onsuccess = () => {
       const db = dbReq.result;
       const tx = db.transaction([DB_STORE, DB_EVENTS_STORE], 'readwrite');
-      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode });
+      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode }, 'main');
       tx.objectStore(DB_EVENTS_STORE).add({
         timestamp: new Date().toISOString(),
         reason: 'beforeunload',
