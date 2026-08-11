@@ -9,7 +9,7 @@
       title: 'Instrucciones',
       type: 'instructions',
       fields: [
-        { id: 'child_name', label: 'Nombre del niño/a', required: true },
+        { id: 'child_name', label: 'Nombre del niño/a' },
         { id: 'birth_date', label: 'Fecha de nacimiento', type: 'date' },
         { id: 'eval_date', label: 'Fecha de hoy', type: 'date' },
         { id: 'age_months', label: 'Edad en meses', type: 'number' }
@@ -594,7 +594,11 @@
       const db = await openDB();
       const tx = db.transaction(DB_STORE, 'readwrite');
       tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode });
-    } catch (e) { /* silently fail */ }
+      await new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) { console.error('Error guardando estado:', e); }
   }
 
   async function loadState() {
@@ -790,8 +794,8 @@
       const value = saved[field.id] || (field.type === 'date' ? today : '');
       return `
         <div class="form-group">
-          <label for="${field.id}">${field.label}${field.required ? ' *' : ''}</label>
-          <input type="${field.type || 'text'}" id="${field.id}" value="${value}" ${field.required ? 'required' : ''}>
+          <label for="${field.id}">${field.label}</label>
+          <input type="${field.type || 'text'}" id="${field.id}" value="${value}">
         </div>
       `;
     }).join('');
@@ -1575,6 +1579,17 @@
   app.addEventListener('input', () => saveState());
   app.addEventListener('change', () => saveState());
 
+  // Save state before page unload (reload/close)
+  window.addEventListener('beforeunload', () => {
+    const dbReq = indexedDB.open(DB_NAME, 1);
+    dbReq.onupgradeneeded = () => dbReq.result.createObjectStore(DB_STORE);
+    dbReq.onsuccess = () => {
+      const db = dbReq.result;
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode });
+    };
+  });
+
   // ===== NAV =====
   function updateNav() {
     btnPrev.disabled = currentSection === 0;
@@ -1583,94 +1598,6 @@
     const pct = Math.round(((currentSection) / SECTIONS.length) * 100);
     progressFill.style.width = pct + '%';
     progressText.textContent = 'Sección ' + (currentSection + 1) + ' de ' + SECTIONS.length;
-  }
-
-  // ===== VALIDATION =====
-  function validate(section) {
-    const errors = [];
-
-    if (section.type === 'instructions') {
-      const name = (responses[section.id] || {}).child_name;
-      if (!name || !name.trim()) errors.push('Nombre del niño/a es obligatorio');
-      return errors;
-    }
-
-    if (section.type === 'frequency') {
-      section.questions.forEach((q, qi) => {
-        if (!responses[section.id + '_' + qi]) errors.push(qi + 1);
-      });
-    }
-
-    if (section.type === 'yesno') {
-      section.questions.forEach((q, qi) => {
-        if (!responses[section.id + '_' + qi]) errors.push(qi + 1);
-      });
-    }
-
-    if (section.type === 'single') {
-      if (!responses[section.id + '_0']) errors.push(1);
-    }
-
-    if (section.type === 'parte1') {
-      const sr = responses[section.id] || {};
-      section.produccion.questions.forEach((q, qi) => {
-        if (!sr['prod_' + qi]) errors.push('Producción ' + (qi + 1));
-      });
-      if (!sr['desarrollo_0']) errors.push('Desarrollo del vocabulario');
-      let anyVocab = false;
-      section.vocabulario.groups.forEach((g, gi) => {
-        if ((sr['vocab_' + gi] || []).length > 0) anyVocab = true;
-      });
-      if (!anyVocab) errors.push('Vocabulario (marque al menos una palabra)');
-      section.usos.questions.forEach((q, qi) => {
-        if (!sr['usos_' + qi]) errors.push('Usos ' + (qi + 1));
-      });
-    }
-
-    if (section.type === 'gramatica') {
-      const sr = responses[section.id] || {};
-      section.terminaciones.questions.forEach((q, qi) => {
-        if (!sr['term_' + qi]) errors.push('Terminaciones ' + (qi + 1));
-      });
-      if (!(sr['personas_0'] || []).length) errors.push('Personas (marque al menos una)');
-      let anyVerbo = false;
-      section.verbos.groups.forEach((g, gi) => {
-        if ((sr['verbos_' + gi] || []).length > 0) anyVerbo = true;
-      });
-      if (!anyVerbo) errors.push('Verbos difíciles (marque al menos uno)');
-      section.sorprendentes.items.forEach((item, ii) => {
-        if (!sr['sorp_' + ii]) errors.push('Palabras sorprendentes ' + (ii + 1));
-      });
-      if (!sr['combinacion_0']) errors.push('Combinación de palabras');
-      if (sr['combinacion_0'] && sr['combinacion_0'] !== 'Todavía no') {
-        [1,2,3].forEach(n => {
-          if (!sr['ejemplo_' + n] || !sr['ejemplo_' + n].trim()) errors.push('Ejemplo ' + n);
-        });
-      }
-      section.complejidad.questions.forEach((q, qi) => {
-        if ((sr['comp_' + qi] || []).length === 0) errors.push('Complejidad ' + (qi + 1));
-      });
-    }
-
-    if (section.type === 'wordlist') {
-      let any = false;
-      section.groups.forEach((g, gi) => {
-        if ((responses[section.id + '_' + gi] || []).length > 0) any = true;
-      });
-      if (!any) errors.push('Marque al menos una palabra');
-    }
-
-    return errors;
-  }
-
-  function showValidation(errors) {
-    const existing = app.querySelector('.validation-msg');
-    if (existing) existing.remove();
-    const msg = document.createElement('div');
-    msg.className = 'validation-msg';
-    msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Faltan ' + errors.length + ' respuesta(s). Por favor, complete todo antes de continuar.';
-    app.prepend(msg);
-    msg.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   btnPrev.addEventListener('click', () => {
@@ -1684,14 +1611,6 @@
 
   btnNext.addEventListener('click', () => {
     if (currentSection < SECTIONS.length) {
-      const section = SECTIONS[currentSection];
-      const errors = validate(section);
-      if (errors.length > 0) {
-        showValidation(errors);
-        return;
-      }
-      const oldMsg = app.querySelector('.validation-msg');
-      if (oldMsg) oldMsg.remove();
       currentSection++;
       saveState();
       render();
