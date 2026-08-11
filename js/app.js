@@ -579,17 +579,46 @@
   let darkMode = false;
   const DB_NAME = 'macarthur-cdi';
   const DB_STORE = 'state';
+  const DB_EVENTS_STORE = 'events';
 
   function openDB() {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
+      const req = indexedDB.open(DB_NAME, 2);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) {
+          db.createObjectStore(DB_STORE);
+        }
+        if (!db.objectStoreNames.contains(DB_EVENTS_STORE)) {
+          db.createObjectStore(DB_EVENTS_STORE, { keyPath: 'id', autoIncrement: true });
+        }
+      };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
   }
 
-  async function saveState() {
+  function cloneResponses() {
+    return JSON.parse(JSON.stringify(responses));
+  }
+
+  function getTargetPayload(target) {
+    if (!target || !target.matches || !target.matches('input, textarea, select')) return null;
+
+    return {
+      id: target.id || null,
+      name: target.name || null,
+      type: target.type || target.tagName.toLowerCase(),
+      value: target.type === 'checkbox' || target.type === 'radio' ? target.value : target.value ?? null,
+      checked: typeof target.checked === 'boolean' ? target.checked : null,
+      dataset: Object.keys(target.dataset || {}).reduce((acc, key) => {
+        acc[key] = target.dataset[key];
+        return acc;
+      }, {})
+    };
+  }
+
+  async function saveState(reason = 'state-save', extra = {}) {
     try {
       const db = await openDB();
       const tx = db.transaction(DB_STORE, 'readwrite');
@@ -597,6 +626,20 @@
       await new Promise((resolve, reject) => {
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+      });
+
+      const eventTx = db.transaction(DB_EVENTS_STORE, 'readwrite');
+      eventTx.objectStore(DB_EVENTS_STORE).add({
+        timestamp: new Date().toISOString(),
+        reason,
+        currentSection,
+        darkMode,
+        extra,
+        responses: cloneResponses()
+      });
+      await new Promise((resolve, reject) => {
+        eventTx.oncomplete = () => resolve();
+        eventTx.onerror = () => reject(eventTx.error);
       });
     } catch (e) { console.error('Error guardando estado:', e); }
   }
@@ -615,8 +658,11 @@
 
   function clearState() {
     openDB().then(db => {
-      const tx = db.transaction(DB_STORE, 'readwrite');
+      const tx = db.transaction([DB_STORE, DB_EVENTS_STORE], 'readwrite');
       tx.objectStore(DB_STORE).delete('main');
+      if (db.objectStoreNames.contains(DB_EVENTS_STORE)) {
+        tx.objectStore(DB_EVENTS_STORE).clear();
+      }
     }).catch(() => {});
   }
 
@@ -1576,17 +1622,41 @@
   }
 
   // Auto-save on any input change (delegated)
-  app.addEventListener('input', () => saveState());
-  app.addEventListener('change', () => saveState());
+  app.addEventListener('input', (event) => {
+    saveState('input', {
+      target: getTargetPayload(event.target)
+    });
+  });
+  app.addEventListener('change', (event) => {
+    saveState('change', {
+      target: getTargetPayload(event.target)
+    });
+  });
 
   // Save state before page unload (reload/close)
   window.addEventListener('beforeunload', () => {
-    const dbReq = indexedDB.open(DB_NAME, 1);
-    dbReq.onupgradeneeded = () => dbReq.result.createObjectStore(DB_STORE);
+    const dbReq = indexedDB.open(DB_NAME, 2);
+    dbReq.onupgradeneeded = () => {
+      const db = dbReq.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE);
+      }
+      if (!db.objectStoreNames.contains(DB_EVENTS_STORE)) {
+        db.createObjectStore(DB_EVENTS_STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
     dbReq.onsuccess = () => {
       const db = dbReq.result;
-      const tx = db.transaction(DB_STORE, 'readwrite');
+      const tx = db.transaction([DB_STORE, DB_EVENTS_STORE], 'readwrite');
       tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode });
+      tx.objectStore(DB_EVENTS_STORE).add({
+        timestamp: new Date().toISOString(),
+        reason: 'beforeunload',
+        currentSection,
+        darkMode,
+        extra: { note: 'persistencia al salir o recargar' },
+        responses: cloneResponses()
+      });
     };
   });
 
@@ -1603,7 +1673,7 @@
   btnPrev.addEventListener('click', () => {
     if (currentSection > 0) {
       currentSection--;
-      saveState();
+      saveState('navigation', { direction: 'prev', currentSection });
       render();
       window.scrollTo(0, 0);
     }
@@ -1612,7 +1682,7 @@
   btnNext.addEventListener('click', () => {
     if (currentSection < SECTIONS.length) {
       currentSection++;
-      saveState();
+      saveState('navigation', { direction: 'next', currentSection });
       render();
       window.scrollTo(0, 0);
     }
@@ -1999,7 +2069,7 @@
     document.getElementById('theme-toggle').addEventListener('click', () => {
       darkMode = !darkMode;
       document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
-      saveState();
+      saveState('theme-toggle', { darkMode });
     });
 
     render();
