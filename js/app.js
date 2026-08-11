@@ -576,6 +576,7 @@
   // ===== STATE =====
   let currentSection = 0;
   const responses = {};
+  let darkMode = false;
   const DB_NAME = 'macarthur-cdi';
   const DB_STORE = 'state';
 
@@ -592,7 +593,7 @@
     try {
       const db = await openDB();
       const tx = db.transaction(DB_STORE, 'readwrite');
-      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection });
+      tx.objectStore(DB_STORE).put({ id: 'main', responses, currentSection, darkMode });
     } catch (e) { /* silently fail */ }
   }
 
@@ -2067,7 +2068,21 @@
     if (saved) {
       Object.assign(responses, saved.responses || {});
       currentSection = saved.currentSection || 0;
+      darkMode = saved.darkMode || false;
     }
+
+    // Apply dark mode
+    if (darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      darkMode = !darkMode;
+      document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
+      saveState();
+    });
+
     render();
   })();
 

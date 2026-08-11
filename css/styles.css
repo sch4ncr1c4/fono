@@ -21,6 +21,28 @@
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
 }
 
+[data-theme="dark"] {
+  --primary: #60A5FA;
+  --primary-light: #93C5FD;
+  --primary-dark: #3B82F6;
+  --primary-bg: #1E3A5F;
+  --success: #34D399;
+  --success-bg: #064E3B;
+  --gray-50: #111827;
+  --gray-100: #1F2937;
+  --gray-200: #374151;
+  --gray-300: #4B5563;
+  --gray-400: #6B7280;
+  --gray-500: #9CA3AF;
+  --gray-600: #D1D5DB;
+  --gray-700: #E5E7EB;
+  --gray-800: #F3F4F6;
+  --gray-900: #F9FAFB;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.2);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -30,6 +52,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* ===== HEADER ===== */
@@ -531,3 +554,228 @@ body {
     padding: 16px;
   }
 }
+
+/* ===== DARK MODE TOGGLE ===== */
+.theme-toggle {
+  background: var(--gray-200);
+  border: none;
+  border-radius: 20px;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.theme-toggle::after {
+  content: '☀️';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: transform 0.3s, background 0.3s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: var(--primary-dark);
+}
+
+[data-theme="dark"] .theme-toggle::after {
+  content: '🌙';
+  transform: translateX(20px);
+  background: var(--gray-800);
+}
+
+/* ===== DARK MODE EXTRAS ===== */
+/* ===== DARK MODE OVERRIDES ===== */
+[data-theme="dark"] .header {
+  background: var(--gray-100);
+  border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .progress-container {
+  background: var(--gray-100);
+  border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .section-card {
+  background: var(--gray-100);
+  box-shadow: var(--shadow);
+}
+
+[data-theme="dark"] .section-header {
+  border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .section-title {
+  color: var(--gray-800);
+}
+
+[data-theme="dark"] .section-desc {
+  color: var(--gray-500);
+}
+
+[data-theme="dark"] .question {
+  border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .question-text {
+  color: var(--gray-700);
+}
+
+[data-theme="dark"] .option-label {
+  border-color: var(--gray-300);
+  color: var(--gray-700);
+}
+
+[data-theme="dark"] .option-label:hover {
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+}
+
+[data-theme="dark"] .option-label.selected {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .word-item {
+  border-color: var(--gray-300);
+  color: var(--gray-700);
+}
+
+[data-theme="dark"] .word-item:hover {
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+}
+
+[data-theme="dark"] .word-item.checked {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+
+[data-theme="dark"] .word-item span {
+  color: var(--gray-700);
+}
+
+[data-theme="dark"] .nav-bar {
+  background: var(--gray-100);
+  border-top-color: var(--gray-200);
+}
+
+[data-theme="dark"] .btn-ghost {
+  background: transparent;
+  color: var(--gray-600);
+  border-color: var(--gray-300);
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  background: var(--gray-200);
+}
+
+[data-theme="dark"] .form-group label {
+  color: var(--gray-600);
+}
+
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  border-color: var(--gray-300);
+}
+
+[data-theme="dark"] input[type="text"]:focus,
+[data-theme="dark"] input[type="number"]:focus,
+[data-theme="dark"] input[type="email"]:focus,
+[data-theme="dark"] input[type="date"]:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-bg);
+}
+
+[data-theme="dark"] .validation-msg {
+  background: #450A0A;
+  color: #FCA5A5;
+}
+
+[data-theme="dark"] .instructions-card {
+  background: var(--gray-100);
+}
+
+[data-theme="dark"] .instructions-header {
+  background: #1a3a2a;
+}
+
+[data-theme="dark"] .instructions-title {
+  color: var(--gray-800);
+  border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .instructions-item {
+  color: var(--gray-600);
+}
+
+[data-theme="dark"] .instructions-item::before {
+  color: var(--gray-400);
+}
+
+[data-theme="dark"] .instructions-note {
+  background: #3d3000;
+}
+
+[data-theme="dark"] .instructions-note-title {
+  color: var(--gray-800);
+}
+
+[data-theme="dark"] .instructions-note p {
+  color: var(--gray-500);
+}
+
+[data-theme="dark"] .part-header-title {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+[data-theme="dark"] .final-screen h2 {
+  color: var(--gray-800);
+}
+
+[data-theme="dark"] .final-screen p {
+  color: var(--gray-500);
+}
+
+[data-theme="dark"] .word-count {
+  color: var(--gray-400);
+}
+
+[data-theme="dark"] .question-number {
+  color: var(--primary);
+}
+
+[data-theme="dark"] .info-grid .form-group input[type="text"],
+[data-theme="dark"] .info-grid .form-group input[type="email"],
+[data-theme="dark"] .info-grid .form-group input[type="number"] {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  border-color: var(--gray-300);
+}
+
+[data-theme="dark"] .badge-si { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .badge-no { background: #450A0A; color: #FCA5A5; }
+[data-theme="dark"] .badge-av { background: #451A03; color: #FCD34D; }
+[data-theme="dark"] .badge-mv { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .badge-tn { background: var(--gray-200); color: var(--gray-500); }
