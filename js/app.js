@@ -35,7 +35,7 @@
       options: ['Todavía no', 'A veces', 'Muchas veces', 'Ya no'],
       questions: [
         { text: 'A veces los niños cantan por su cuenta, por ejemplo, tratan de cantarle a un adulto o a algún muñeco suyo. ¿Hace eso su hijo?' },
-        { text: 'Los niños tienen muchas maneras diferentes de pedir las cosas. A veces señalan y miran lo que quieren y entonces dicen algo como "a-a", ¿hacen que oglamos su petición? ¿Hace eso su hijo?' },
+        { text: 'Los niños tienen muchas maneras diferentes de pedir las cosas. A veces señalan y miran lo que quieren y entonces dicen algo como "a-a", ¿hacen que oigamos su petición? ¿Hace eso su hijo?' },
         { text: 'Para llamar su atención sobre algo que les llama la atención, por ejemplo, si ven un pájaro o un coche que pasa, los niños a veces acompañan voz gestos con sonidos. ¿Hace eso su hijo?' },
         { text: 'Algunas veces, cuando se habla a los niños, da la impresión de que responden y establecen un diálogo. Aunque no siempre utilizan palabras, parece que están conversando. ¿Hace eso su hijo?' },
         { text: 'A veces los niños repiten una sílaba varias o muchas veces. Son sílabas que usted oye bien y que usted puede repetir, como "pa-pa-pa" o "ma-ma-ma" o "ba-ba-ba". ¿Hace eso su hijo?' },
