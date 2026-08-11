@@ -390,6 +390,33 @@ body {
   box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
+/* Validation */
+.question.unanswered {
+  border-left: 3px solid #DC2626;
+  padding-left: 10px;
+  margin-left: -13px;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.validation-msg {
+  background: #FEF2F2;
+  color: #DC2626;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Grid alignment for info forms */
 .info-grid {
   display: grid;
